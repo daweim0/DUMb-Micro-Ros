@@ -1,13 +1,11 @@
-// DUMb Micro Ros - 
-// Copyright © 2022-2999, David Michelman
-// BSD 3 clause License
-
-
 #pragma once
 
 #ifndef DUMMR_MESSAGE_JSON_SIZE
 #define DUMMR_MESSAGE_JSON_SIZE 256
 #endif
+
+#include <Arduino.h>
+#include "ArduinoJsonv6.h"
 
 StaticJsonDocument<128> dummr_last_topic;
 StaticJsonDocument<256> dummr_last_message_data;
@@ -15,6 +13,8 @@ StaticJsonDocument<256> dummr_last_message_data;
 String start_marker = "dummr:";
 
 void dummr_init() {
+  // there might be partial data host serial buffer (if the uc was reset) in the
+  // middle of printing a line. Add a newline to clear it
   Serial.println();
 }
 
