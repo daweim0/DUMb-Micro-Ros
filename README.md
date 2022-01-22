@@ -30,4 +30,3 @@ Dummr is a simpler alternative to Micro-ROS and Rosserial. Dummr is designed for
 
 ### Licence(s):
 There's code in this repo under BSD, MIT, and Creative Commons licences.
-
