@@ -49,6 +49,7 @@ message_regex = re.compile(start_marker + "(?P<json_doc>.*)$")
 incoming_message_queue = []
 
 
+# this function is under a CC BY-SA 4.0 licence because it was from stack overflow
 # from https://stackoverflow.com/questions/6086976/how-to-get-a-complete-exception-stack-trace-in-python
 def format_exception(e):
     exception_list = traceback.format_stack()
@@ -87,45 +88,55 @@ example: {"op":"sub", "topic":"/asdf/asdf", "type": "std_msgs/String"}
 
 
 def publish_messages():
-    with serial.Serial("/dev/ttyS6", 115200, timeout=None) as ser:
-        while True:
-            next_line_bytes = ser.readline()
-            try:
-                next_line = next_line_bytes.decode('utf-8')
+    try:
+        with serial.Serial(rospy.get_param("~serial_port"), 115200, timeout=None) as ser:
+            while True:
+                next_line_bytes = ser.readline()
+                try:
+                    next_line = next_line_bytes.decode('utf-8')
 
-                if next_line.startswith("dummr:fetch"):
-                    if len(incoming_message_queue) > 0:
-                        response = start_marker + "m" + incoming_message_queue.pop(0)
-                        ser.write(bytes(response + '\n', 'utf-8'))  # m for message
-                    else:
-                        response = start_marker + "e"
-                        ser.write(bytes(response + "\n", "utf-8"))  # e for empty
-                else:
-                    next_json_isolated = message_regex.match(next_line)
-                    if next_json_isolated:
-                        next_line_json = json.loads("[" + next_json_isolated.group("json_doc") + "]")
-                        op = next_line_json[0]["op"]
-                        msg_type = next_line_json[0]["type"]
-                        topic = next_line_json[0]["topic"]
-                        if op == "sub":
-                            # this always means registering a new subscriber
-                            rospy.Subscriber(topic, roslib.message.get_message_class(msg_type), subscribe_traffic(topic, ser))
-                        elif op == "pub":
-                            ros_data = next_line_json[1]
-                            # TODO: remove strict_mode=True once debugging is done
-                            if topic not in publishers:
-                                publishers[topic] = rospy.Publisher(topic, roslib.message.get_message_class(msg_type), queue_size=10)
-                            message = convert_dictionary_to_ros_message(msg_type, ros_data, strict_mode=True)
-                            publishers[topic].publish(message)
+                    if next_line.startswith("dummr:fetch"):
+                        if len(incoming_message_queue) > 0:
+                            response = start_marker + "m" + incoming_message_queue.pop(0)
+                            ser.write(bytes(response + '\n', 'utf-8'))  # m for message
                         else:
-                            print("bad data recieved: " + next_line)
-            except json.decoder.JSONDecodeError as e:
-                print("invalid json data encountered, probably a partial message (this is normal on startup)")
-            except Exception as e:
-                print("Error: ")
-                print(format_exception(e))
-                pdb.set_trace()
-                pass
+                            response = start_marker + "e"
+                            ser.write(bytes(response + "\n", "utf-8"))  # e for empty
+                    else:
+                        next_json_isolated = message_regex.match(next_line)
+                        if next_json_isolated:
+                            next_line_json = json.loads("[" + next_json_isolated.group("json_doc") + "]")
+                            op = next_line_json[0]["op"]
+                            msg_type = next_line_json[0]["type"]
+                            topic = next_line_json[0]["topic"]
+                            if op == "sub":
+                                # this always means registering a new subscriber
+                                rospy.Subscriber(topic, roslib.message.get_message_class(msg_type), subscribe_traffic(topic, ser))
+                            elif op == "pub":
+                                ros_data = next_line_json[1]
+                                # TODO: remove strict_mode=True once debugging is done
+                                if topic not in publishers:
+                                    publishers[topic] = rospy.Publisher(topic, roslib.message.get_message_class(msg_type), queue_size=10)
+                                message = convert_dictionary_to_ros_message(msg_type, ros_data, strict_mode=True)
+                                publishers[topic].publish(message)
+                            else:
+                                print("bad data recieved: " + next_line)
+                except json.decoder.JSONDecodeError as e:
+                    print("invalid json data encountered, probably a partial message (this is normal on startup)")
+                except Exception as e:
+                    print("Error: ")
+                    print(format_exception(e))
+                    pdb.set_trace()
+                    pass
+    except KeyError as e:
+        print("serial port must be specified")
+        format_exception(e)
+        sys.exit(1)
+    except OSError as e:
+        print("OSError, is the serial port " + rospy.get_param("~serial_port") + " connected?")
+        format_exception(e)
+        sys.exit(1)
+
 
 
 def main():
@@ -139,8 +150,6 @@ def main():
         rospy.spin()
     except rospy.ROSInterruptException:
         pass
-
-
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~ "File" boundary here ~~~~~~~~~~~~~~~~~~~~~~~~

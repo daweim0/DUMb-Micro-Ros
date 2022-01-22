@@ -26,8 +26,8 @@ void loop() {
         pub_message("/get_string_len/echo", "std_msgs/String", return_doc);
   
         StaticJsonDocument<64> return_doc2;
-        return_doc["data"] = strlen(dummr_last_message_data["data"]); 
-        pub_message("/get_string_len/output", "std_msgs/Int32", return_doc); 
+        return_doc2["data"] = strlen(dummr_last_message_data["data"]); 
+        pub_message("/get_string_len/output", "std_msgs/Int32", return_doc2); 
       }
   }
   else {
