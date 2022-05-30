@@ -1,6 +1,6 @@
 # DUMb-Micro-Ros (dummr)
 
-Dummr is a simpler alternative to Micro-ROS and Rosserial. Dummr is designed for simplicity, quick prototyping, and to frusturate performance freaks.
+Dummr is a simpler alternative to Micro-ROS and Rosserial. Dummr is designed for simplicity, quick prototyping, and to frustrate performance freaks.
 
 ### Features:
 * Dummr is easy to build
