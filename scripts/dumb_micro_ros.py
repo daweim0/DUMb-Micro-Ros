@@ -153,8 +153,9 @@ def main():
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~ "File" boundary here ~~~~~~~~~~~~~~~~~~~~~~~~
-# (I couldn't figure out how to make a multi-file catkin python project
-# work. Probably something stupid, but this is easier)
+# (Sticking everything in a single file for ease of copy-and-pasting. Depending on how a catkin 
+# project is set up, neighboring python can have different import paths. Putting all the code
+# in a single file avoids all that headache.)
 
 
 # Software License Agreement (BSD License)
